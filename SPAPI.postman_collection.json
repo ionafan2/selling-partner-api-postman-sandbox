@@ -1,0 +1,346 @@
+{
+	"info": {
+		"_postman_id": "09e74677-8251-44aa-8e2e-5343ffd40228",
+		"name": "SP API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Init",
+			"item": [
+				{
+					"name": "AssumeRole",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f2ef163f-210a-4115-a3f8-8ad6396296c5",
+								"exec": [
+									"var credentials = xml2Json(responseBody).AssumeRoleResponse.AssumeRoleResult.Credentials;",
+									"",
+									"pm.environment.set(\"AccessKeyId\", credentials.AccessKeyId);",
+									"pm.environment.set(\"SecretAccessKey\", credentials.SecretAccessKey);",
+									"pm.environment.set(\"SessionToken\", credentials.SessionToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "awsv4",
+							"awsv4": [
+								{
+									"key": "region",
+									"value": "{{awsRegion}}",
+									"type": "string"
+								},
+								{
+									"key": "secretKey",
+									"value": "{{awsUserSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessKey",
+									"value": "{{awsUserKey}}",
+									"type": "string"
+								},
+								{
+									"key": "service",
+									"value": "sts",
+									"type": "string"
+								},
+								{
+									"key": "addAuthDataToQuery",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "sessionToken",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://sts.amazonaws.com/?Version={{awsStsVersion}}&Action=AssumeRole&RoleSessionName=postmanSpApi&RoleArn={{RoleArn}}",
+							"protocol": "https",
+							"host": [
+								"sts",
+								"amazonaws",
+								"com"
+							],
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "Version",
+									"value": "{{awsStsVersion}}"
+								},
+								{
+									"key": "Action",
+									"value": "AssumeRole"
+								},
+								{
+									"key": "RoleSessionName",
+									"value": "postmanSpApi"
+								},
+								{
+									"key": "RoleArn",
+									"value": "{{RoleArn}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetAccessToken",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "43018038-d28f-4454-868f-b5a909d4aee3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.environment.set(\"accessToken\", jsonData.access_token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "refresh_token",
+									"type": "text"
+								},
+								{
+									"key": "refresh_token",
+									"value": "{{refreshToken}}",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{appClientID}}",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{appClientSecret}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{apiOAuthUrl}}/auth/o2/token",
+							"protocol": "https",
+							"host": [
+								"{{apiOAuthUrl}}"
+							],
+							"path": [
+								"auth",
+								"o2",
+								"token"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "ApiCalls",
+			"item": [
+				{
+					"name": "Orders - Yesterday",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "346698a3-7e74-4fc5-8f17-6e2c859a3c33",
+								"exec": [
+									"function getYesterdaysDate() {",
+									"    let today = new Date();",
+									"    let yesterday = new Date(today);",
+									"    yesterday.setDate(yesterday.getDate() - 1);",
+									"    return yesterday.toISOString();",
+									"}",
+									"",
+									"pm.environment.set(\"dateYesterday\", getYesterdaysDate());"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "4e8b47ed-552c-4a40-b929-f7daccd9b7f7",
+								"exec": [
+									"var orders = pm.response.json().payload.Orders;",
+									"console.log('Found '+orders.length+' orders');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "awsv4",
+							"awsv4": [
+								{
+									"key": "sessionToken",
+									"value": "{{SessionToken}}",
+									"type": "string"
+								},
+								{
+									"key": "secretKey",
+									"value": "{{SecretAccessKey}}",
+									"type": "string"
+								},
+								{
+									"key": "accessKey",
+									"value": "{{AccessKeyId}}",
+									"type": "string"
+								},
+								{
+									"key": "addAuthDataToQuery",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "service",
+									"value": "execute-api",
+									"type": "string"
+								},
+								{
+									"key": "region",
+									"value": "us-east-1",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-amz-access-token",
+								"type": "text",
+								"value": "{{accessToken}}",
+								"description": "Header name must be in LOWERCASE!"
+							}
+						],
+						"url": {
+							"raw": "https://{{apiUrl}}/orders/v0/orders?MarketplaceIds=ATVPDKIKX0DER&CreatedAfter={{dateYesterday}}",
+							"protocol": "https",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"orders",
+								"v0",
+								"orders"
+							],
+							"query": [
+								{
+									"key": "MarketplaceIds",
+									"value": "ATVPDKIKX0DER"
+								},
+								{
+									"key": "CreatedAfter",
+									"value": "{{dateYesterday}}",
+									"description": "See Pre-request Script"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "df489ff2-e94f-492b-8ff6-9c6e4fc36af5",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "2c641a7e-daec-4792-a114-333473c72a87",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "a05b5ea2-2645-48a6-aff2-dceb4d64bdcc",
+			"key": "apiUrl",
+			"value": "sellingpartnerapi-na.amazon.com"
+		},
+		{
+			"id": "89d36b08-4b51-4729-95b9-e4862de00105",
+			"key": "apiOAuthUrl",
+			"value": "api.amazon.com"
+		},
+		{
+			"id": "bcc784f0-5ba4-4b1f-b3e5-63b755bc6a68",
+			"key": "awsStsVersion",
+			"value": "2011-06-15"
+		},
+		{
+			"id": "73c40cc9-ae91-492d-b152-7d5dee1a3861",
+			"key": "awsRegion",
+			"value": "us-east-1"
+		},
+		{
+			"id": "c702ce5a-295a-4b57-83b7-88b93df10691",
+			"key": "RoleArn",
+			"value": "!REQUIRED!"
+		},
+		{
+			"id": "385e7ada-b549-459f-941c-3cd08ca22bd6",
+			"key": "appClientID",
+			"value": "!REQUIRED!"
+		},
+		{
+			"id": "ef2e6771-2e9f-4b10-a0f8-1adfba43264c",
+			"key": "appClientSecret",
+			"value": "!REQUIRED!"
+		},
+		{
+			"id": "beac28f0-af29-4101-8cc0-a78fcf7471e2",
+			"key": "awsUserKey",
+			"value": "!REQUIRED!"
+		},
+		{
+			"id": "2a9c05f1-b30b-445e-bc0e-9c1b414e7866",
+			"key": "awsUserSecret",
+			"value": "!REQUIRED!"
+		},
+		{
+			"id": "07f7e09c-751a-4037-b252-ca0cdcc50c53",
+			"key": "refreshToken",
+			"value": "!REQUIRED!"
+		}
+	],
+	"protocolProfileBehavior": {}
+}
